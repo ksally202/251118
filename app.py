@@ -2,104 +2,116 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 
-# =============================
-# 전체 스타일 (무채색 컨셉)
-# =============================
+# --------------------------------
+# 페이지 전체 스타일 커스터마이징
+# --------------------------------
+st.set_page_config(page_title="ALL DAY STRESS OUT", layout="centered")
+
+# 배경 / 글꼴 / 카드 CSS
 st.markdown("""
 <style>
 
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-
-html, body, [class*="css"] {
-    font-family: 'Pretendard', sans-serif;
+html, body, [class*="css"]  {
+    font-family: 'Noto Sans KR', sans-serif;
 }
 
 body {
-    background-color: #F5F5F5;
-    color: #333333;
+    background: linear-gradient(135deg, #eef2f3 0%, #dfe9f3 100%);
 }
 
-/* 카드 */
-.card {
-    background-color: #FFFFFF;
-    padding: 22px;
-    border-radius: 16px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
-    margin-bottom: 22px;
-}
-
-/* 프리미엄 카드 */
-.premium-card {
-    background: rgba(255,255,255,0.35);
-    backdrop-filter: blur(10px);
+.title-container {
     padding: 25px;
-    border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.4);
-    margin-bottom: 22px;
+    text-align: center;
+    background: white;
+    border-radius: 18px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    margin-bottom: 25px;
 }
 
-/* 버튼 디자인 */
-div.stButton > button {
-    background: linear-gradient(to right, #333333, #555555);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    padding: 10px 20px;
-    font-size: 16px;
-    transition: 0.2s ease;
-}
-
-div.stButton > button:hover {
-    background: linear-gradient(to right, #000000, #333333);
+.card {
+    background: #ffffff;
+    padding: 22px;
+    border-radius: 18px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin-top: 20px;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
+# --------------------------------
+# 헤더 타이틀 카드
+# --------------------------------
+st.markdown("""
+<div class="title-container">
+    <h1 style="margin-bottom:5px;">🧠 ALL DAY STRESS OUT</h1>
+    <p style="font-size:17px; color:#333;">
+        스트레스 지수를 빠르게 예측하는 경량 AI Web App
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
-# =============================
-# 전체 페이지 구조 시작
-# =============================
+st.caption("설치 없이 바로 실행되는 초경량 스트레스 예측 모델 ✨")
 
-st.title("🌿 ALL DAY Stress Out")
-st.caption("차분한 무채색 기반 헬스케어 · 스트레스 관리 서비스")
+# --------------------------------
+# 예측 함수
+# --------------------------------
+def predict_tomorrow(last_seq):
+    return np.mean(last_seq)
 
-# ---------- 기분 선택 ----------
-st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.subheader("🙂 오늘의 기분 선택")
-mood = st.segmented_control(
-    "오늘 기분",
-    ["😊 행복", "🙂 보통", "😥 스트레스", "😭 매우 스트레스"]
+def predict_week(last_seq):
+    preds = []
+    seq = last_seq.copy()
+
+    for _ in range(7):
+        tomorrow = np.mean(seq)
+        preds.append(tomorrow)
+        seq = np.append(seq[1:], tomorrow)
+
+    return preds
+
+# --------------------------------
+# 입력 카드 UI
+# --------------------------------
+st.markdown('<div class="card">', unsafe_allow_html=True)
+
+st.subheader("📥 최근 7일 자율신경활성도 입력")
+user_input = st.text_input(
+    "7일치 값을 쉼표로 입력하세요",
+    "50, 52, 55, 53, 51, 49, 50"
 )
-st.write(f"**👉 오늘 기분:** {mood}")
-st.markdown("</div>", unsafe_allow_html=True)
 
-# ---------- 오늘 스트레스 ----------
-st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.subheader("📊 오늘의 스트레스 지수")
-today_stress = np.random.randint(30, 90)
-st.metric("스트레스 지수", f"{today_stress}/100")
-st.markdown("</div>", unsafe_allow_html=True)
+predict_btn = st.button("🔮 예측하기")
 
-# ---------- 추천 ----------
-st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.subheader("🧘 오늘의 스트레스 완화 추천")
-st.info("오늘은 따뜻한 샤워나 차분한 음악과 함께 휴식을 취해보는 것을 추천드려요.")
-st.video("https://www.youtube.com/watch?v=UBMk30rjy0o")
-st.markdown("</div>", unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------- 프리미엄 ----------
-st.markdown("<div class='premium-card'>", unsafe_allow_html=True)
-st.subheader("🔒 Premium — 수면 패턴 분석")
-premium = st.checkbox("프리미엄 기능 잠금 해제")
+# --------------------------------
+# 예측 결과 출력 카드
+# --------------------------------
+if predict_btn:
+    try:
+        last_seq = np.array(list(map(float, user_input.split(","))))
 
-if not premium:
-    st.write("프리미엄 구독 시 수면 패턴 분석 기능을 사용할 수 있습니다.")
-else:
-    sleep_hours = np.random.randint(4, 9, size=7)
-    df = pd.DataFrame({"Day": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"], "Sleep": sleep_hours})
-    st.bar_chart(df, x="Day", y="Sleep")
+        if len(last_seq) != 7:
+            st.error("⚠️ 정확히 7개의 숫자를 입력해야 합니다!")
 
-st.markdown("</div>", unsafe_allow_html=True)
+        else:
+            tomorrow = predict_tomorrow(last_seq)
+            week = predict_week(last_seq)
 
-st.caption("© 2025 ALL DAY Stress Out – Minimal Black & White Theme")
+            st.markdown('<div class="card">', unsafe_allow_html=True)
+            st.subheader("📊 예측 결과")
+
+            st.success(f"🎯 **내일의 스트레스 지수: {tomorrow:.2f}**")
+
+            df_week = pd.DataFrame({
+                "Day": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
+                "Predicted Stress": week
+            })
+
+            st.line_chart(df_week, x="Day", y="Predicted Stress")
+
+            st.markdown('</div>', unsafe_allow_html=True)
+
+    except:
+        st.error("입력 형식이 올바르지 않습니다! (예시: 50,52,53,51,49,50,52)")
